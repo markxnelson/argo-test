@@ -1,0 +1,367 @@
+---
+# Source: weblogic-operator/templates/main.yaml
+apiVersion: "v1"
+kind: "Secret"
+data:
+metadata:
+  labels:
+    weblogic.operatorName: "default"
+  name: "weblogic-operator-secrets"
+  namespace:  "default"
+type: "Opaque"
+---
+# Source: weblogic-operator/templates/main.yaml
+apiVersion: "v1"
+data:
+  serviceaccount: "default"
+  domainNamespaceSelectionStrategy: "List"
+  domainNamespaces: "default"
+  introspectorJobNameSuffix: "-introspector"
+  externalServiceNameSuffix: "-ext"
+  clusterSizePaddingValidationEnabled: "true"
+kind: "ConfigMap"
+metadata:
+  labels:
+    weblogic.operatorName: "default"
+  name: "weblogic-operator-cm"
+  namespace: "default"
+---
+# Source: weblogic-operator/templates/main.yaml
+kind: "ClusterRole"
+apiVersion: "rbac.authorization.k8s.io/v1"
+metadata:
+  name: "default-weblogic-operator-clusterrole-general"
+  labels:
+    weblogic.operatorName: "default"
+rules:
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+- apiGroups: ["weblogic.oracle"]
+  resources: ["domains", "domains/status"]
+  verbs: ["get", "list", "watch", "update", "patch"]
+- apiGroups: ["authentication.k8s.io"]
+  resources: ["tokenreviews"]
+  verbs: ["create"]
+- apiGroups: ["authorization.k8s.io"]
+  resources: ["selfsubjectrulesreviews"]
+  verbs: ["create"]
+---
+# Source: weblogic-operator/templates/main.yaml
+kind: "ClusterRole"
+apiVersion: "rbac.authorization.k8s.io/v1"
+metadata:
+  name: "default-weblogic-operator-clusterrole-namespace"
+  labels:
+    weblogic.operatorName: "default"
+rules:
+- apiGroups: [""]
+  resources: ["services", "configmaps", "pods", "events"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["get", "create"]
+- apiGroups: ["batch"]
+  resources: ["jobs"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
+- apiGroups: ["policy"]
+  resources: ["poddisruptionbudgets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
+---
+# Source: weblogic-operator/templates/main.yaml
+kind: "ClusterRole"
+apiVersion: "rbac.authorization.k8s.io/v1"
+metadata:
+  name: "default-weblogic-operator-clusterrole-nonresource"
+  labels:
+    weblogic.operatorName: "default"
+rules:
+- nonResourceURLs: ["/version/*"]
+  verbs: ["get"]
+---
+# Source: weblogic-operator/templates/main.yaml
+kind: "ClusterRole"
+apiVersion: "rbac.authorization.k8s.io/v1"
+metadata:
+  name: "default-weblogic-operator-clusterrole-operator-admin"
+  labels:
+    weblogic.operatorName: "default"
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
+- apiGroups: [""]
+  resources: ["pods", "events"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["get", "create"]
+---
+# Source: weblogic-operator/templates/main.yaml
+kind: "ClusterRole"
+apiVersion: "rbac.authorization.k8s.io/v1"
+metadata:
+  name: "default-weblogic-operator-clusterrole-domain-admin"
+  labels:
+    weblogic.operatorName: "default"
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
+- apiGroups: [""]
+  resources: ["secrets", "pods", "events"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get", "list"]
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["get", "create"]
+- apiGroups: ["weblogic.oracle"]
+  resources: ["domains"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
+- apiGroups: ["weblogic.oracle"]
+  resources: ["domains/status"]
+  verbs: ["get", "watch"]
+---
+# Source: weblogic-operator/templates/main.yaml
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  labels:
+    weblogic.operatorName: "default"
+  name: "default-weblogic-operator-clusterrolebinding-general"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "default-weblogic-operator-clusterrole-general"
+subjects:
+- kind: "ServiceAccount"
+  apiGroup: ""
+  name: "default"
+  namespace: "default"
+---
+# Source: weblogic-operator/templates/main.yaml
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  labels:
+    weblogic.operatorName: "default"
+  name: "default-weblogic-operator-clusterrolebinding-auth-delegator"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "system:auth-delegator"
+subjects:
+- kind: "ServiceAccount"
+  apiGroup: ""
+  name: "default"
+  namespace: "default"
+---
+# Source: weblogic-operator/templates/main.yaml
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  labels:
+    weblogic.operatorName: "default"
+  name: "default-weblogic-operator-clusterrolebinding-discovery"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "system:discovery"
+subjects:
+- kind: "ServiceAccount"
+  apiGroup: ""
+  name: "default"
+  namespace: "default"
+---
+# Source: weblogic-operator/templates/main.yaml
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  labels:
+    weblogic.operatorName: "default"
+  name: "default-weblogic-operator-clusterrolebinding-nonresource"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "default-weblogic-operator-clusterrole-nonresource"
+subjects:
+- kind: "ServiceAccount"
+  apiGroup: ""
+  name: "default"
+  namespace: "default"
+---
+# Source: weblogic-operator/templates/main.yaml
+kind: "Role"
+apiVersion: "rbac.authorization.k8s.io/v1"
+metadata:
+  name: "weblogic-operator-role"
+  namespace: "default"
+  labels:
+    weblogic.operatorName: "default"
+rules:
+- apiGroups: [""]
+  resources: ["secrets", "configmaps"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete", "deletecollection"]
+---
+# Source: weblogic-operator/templates/main.yaml
+kind: "RoleBinding"
+apiVersion: "rbac.authorization.k8s.io/v1"
+metadata:
+  name: "weblogic-operator-rolebinding"
+  namespace: "default"
+  labels:
+    weblogic.operatorName: "default"
+subjects:
+- kind: "ServiceAccount"
+  name: "default"
+  namespace: "default"
+  apiGroup: ""
+roleRef:
+  kind: "Role"
+  name: "weblogic-operator-role"
+  apiGroup: "rbac.authorization.k8s.io"
+---
+# Source: weblogic-operator/templates/main.yaml
+kind: "RoleBinding"
+apiVersion: "rbac.authorization.k8s.io/v1"
+metadata:
+  name: "weblogic-operator-rolebinding-namespace"
+  namespace: "default"
+  labels:
+    weblogic.operatorName: "default"
+subjects:
+- kind: "ServiceAccount"
+  name: "default"
+  namespace: "default"
+  apiGroup: ""
+roleRef:
+  kind: "ClusterRole"
+  name: "default-weblogic-operator-clusterrole-namespace"
+  apiGroup: "rbac.authorization.k8s.io"
+---
+# Source: weblogic-operator/templates/main.yaml
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  name: "internal-weblogic-operator-svc"
+  namespace: "default"
+  labels:
+    weblogic.operatorName: "default"
+spec:
+  type: "ClusterIP"
+  selector:
+    app: "weblogic-operator"
+  ports:
+    - port: 8082
+      name: "rest"
+---
+# Source: weblogic-operator/templates/main.yaml
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: "weblogic-operator"
+  namespace: "default"
+  labels:
+    weblogic.operatorName: "default"
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      weblogic.operatorName: "default"
+  replicas: 1
+  template:
+    metadata:
+     labels:
+        weblogic.operatorName: "default"
+        app: "weblogic-operator"
+    spec:
+      serviceAccountName: "default"
+      containers:
+      - name: "weblogic-operator"
+        image: "ghcr.io/oracle/weblogic-kubernetes-operator:3.2.2"
+        imagePullPolicy: "IfNotPresent"
+        command: ["bash"]
+        args: ["/operator/operator.sh"]
+        env:
+        - name: "OPERATOR_NAMESPACE"
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.namespace"
+        - name: "OPERATOR_POD_NAME"
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.name"
+        - name: "OPERATOR_POD_UID"
+          valueFrom:
+            fieldRef:
+              fieldPath: "metadata.uid"
+        - name: "OPERATOR_VERBOSE"
+          value: "false"
+        - name: "JAVA_LOGGING_LEVEL"
+          value: "INFO"
+        - name: "JAVA_LOGGING_MAXSIZE"
+          value: "2e+07"
+        - name: "JAVA_LOGGING_COUNT"
+          value: "10"
+        - name: ISTIO_ENABLED
+          value: "false"
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+        volumeMounts:
+        - name: "weblogic-operator-cm-volume"
+          mountPath: "/operator/config"
+        - name: "weblogic-operator-debug-cm-volume"
+          mountPath: "/operator/debug-config"
+        - name: "weblogic-operator-secrets-volume"
+          mountPath: "/operator/secrets"
+          readOnly: true
+        livenessProbe:
+          exec:
+            command:
+              - "bash"
+              - "/operator/livenessProbe.sh"
+          initialDelaySeconds: 20
+          periodSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+              - "bash"
+              - "/operator/readinessProbe.sh"
+          initialDelaySeconds: 2
+          periodSeconds: 10
+      volumes:
+      - name: "weblogic-operator-cm-volume"
+        configMap:
+          name: "weblogic-operator-cm"
+      - name: "weblogic-operator-debug-cm-volume"
+        configMap:
+          name: "weblogic-operator-debug-cm"
+          optional: true
+      - name: "weblogic-operator-secrets-volume"
+        secret:
+          secretName: "weblogic-operator-secrets"
+---
+# Source: weblogic-operator/templates/main.yaml
+# Copyright (c) 2018, 2021, Oracle and/or its affiliates.
+# Licensed under the Universal Permissive License v 1.0 as shown at https://oss.oracle.com/licenses/upl.
